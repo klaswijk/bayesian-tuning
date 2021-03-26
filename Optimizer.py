@@ -14,17 +14,19 @@ class Optimizer:
         self.run = optimization_funcs[optimization_func]
 
         self.results = {
-            'optimizer': str(self.run),
+            'optimizer': str(self.run),  # TODO: Improve
+            'n_runs': 0,
             'runs': [],
         }
 
     def append_run(self, result):
         run = {
+            'result': (result.x, result.fun),
             'n_iterations': len(result.x_iters),
             'iterations': list(zip(result.x_iters, result.func_vals)),
-            'final_result': result.fun,
         }
         self.results['runs'].append(run)
+        self.results['n_runs'] += 1
 
     def write_json(self, path):
         """
