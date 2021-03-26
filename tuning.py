@@ -44,7 +44,7 @@ def run_tuning(params):
     with mp.Pool(global_params['n_procs']) as p:
 
         for i in range(global_params['n_runs']):
-            tmp = p.apply_async(_work, callback=record_result)
+            tmp = p.apply_async(_work, args=(i,), callback=record_result)
 
         p.close()
         p.join()
@@ -57,7 +57,9 @@ def _work(*args):
         _acotsp,
         DIMS,
         n_calls=global_params['n_calls'],
-        random_state=getpid()
+        random_state=args[0]
+        # args[0] is the loop index. Use this as the random state (seed)
+        # to make sure that the repeated run's do not share random state
     )
 
 def _acotsp(args):
