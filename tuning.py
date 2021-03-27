@@ -2,35 +2,28 @@ import subprocess
 import multiprocessing as mp
 from sys import stdout
 from os import getpid
+from functools import partial
 import numpy as np
 from tqdm import tqdm
 import config
 from Optimizer import Optimizer
 
-global_params = None
-opt = None
 
 def run_tuning(params):
     """Run the tuning according to the params (n_runs, n_procs etc.)"""
 
-    global global_params
-    global_params = params
-
-    type = 'bayesian' if global_params['bayesian'] else 'random'
-
-    global opt
+    type = 'bayesian' if params['bayesian'] else 'random'
     opt = Optimizer(type)
-
-    bar = tqdm(total=global_params['n_runs'], file=stdout, ascii=True)
+    bar = tqdm(total=params['n_runs'], file=stdout, ascii=True)
 
     def record_result(result):
         opt.append_run(result)
         bar.update()
 
-    with mp.Pool(global_params['n_procs']) as p:
+    with mp.Pool(params['n_procs']) as p:
 
-        for i in range(global_params['n_runs']):
-            tmp = p.apply_async(_work, args=(i,), callback=record_result)
+        for i in range(params['n_runs']):
+            tmp = p.apply_async(_work, args=(opt, params, i), callback=record_result)
 
         p.close()
         p.join()
@@ -38,25 +31,28 @@ def run_tuning(params):
 
     opt.write_json(f"./results/{type}/result.json")  # TODO: Unique name
 
+
 def _work(*args):
-    return opt.run(
-        _acotsp,
+    func = partial(_acotsp, args[1]['tsp'], args[1]['n_iterations'])
+    return args[0].run(
+        func,
         config.acotsp['param_dims'],
-        n_calls=global_params['n_calls'],
-        random_state=args[0]
+        n_calls=args[1]['n_calls'],
+        random_state=args[2]
         # args[0] is the loop index. Use this as the random state (seed)
         # to make sure that the repeated run's do not share random state
     )
 
-def _acotsp(args):
+
+def _acotsp(tsp, iter, args):
     """The acotsp objective function"""
     call_args = [
         config.acotsp['path'],
         '--simple',
         '-f',
-        global_params['tsp'],
+        tsp,
         '-i',
-        str(global_params['n_iterations'])
+        str(iter)
     ]
 
     for val, name in zip(args, config.acotsp['param_names']):
