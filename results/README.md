@@ -1,1 +1,1 @@
-Location and name: <instance>/<type>-<date>-<time>.json
+Location and name: \<instance\>/\<type\>-\<date\>-\<time\>.json
