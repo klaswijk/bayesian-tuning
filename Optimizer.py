@@ -15,6 +15,8 @@ class Optimizer:
 
         self.results = {
             'optimizer': str(self.run),  # TODO: Improve
+            'aco_iterations': 0,  # TODO: Add
+            'search_space': [], # TODO: Add
             'n_runs': 0,
             'runs': [],
         }
