@@ -2,45 +2,64 @@ import json
 import numpy as np
 import scipy.optimize as so
 from skopt import gp_minimize
+import config
 
 class Optimizer:
-    """Wraps an optimization function to record partial results"""
+    """Wraps an optimization function to record partial results."""
 
     def __init__(self, optimization_func):
-        optimization_funcs = {
+        name_to_func = {
             'random': random_search,
             'bayesian': bayesian_search,
         }
-        self.run = optimization_funcs[optimization_func]
+        self.func_name = optimization_func
+        self.run = name_to_func[self.func_name]
+        self.runs = []
 
-        self.results = {
-            'optimizer': str(self.run),  # TODO: Improve
-            'aco_iterations': 0,  # TODO: Add
-            'search_space': [], # TODO: Add
-            'n_runs': 0,
-            'runs': [],
-        }
 
     def append_run(self, result):
+        """
+        Add the run to self.results. All runs are assumed to come
+        from the same optimizer run on the same function.
+        """
         run = {
             'result': (result.x, result.fun),
-            'n_iterations': len(result.x_iters),
-            'iterations': list(zip(result.x_iters, result.func_vals)),
+            'n_calls': len(result.x_iters),
+            'calls': list(zip(result.x_iters, result.func_vals)),
         }
-        self.results['runs'].append(run)
-        self.results['n_runs'] += 1
+        self.runs.append(run)
+
 
     def write_json(self, path):
         """
         Write results to a JSON-file, including information about the
         optimizer used.
         """
+
+        name_to_params = {
+            'random': config.random,
+            'bayesian': config.bayesian,
+        }
+        params = name_to_params[self.func_name]
+
+        results = {
+            'optimization_function': {
+                'name': self.func_name,
+                'params': params,
+            },
+            'objective_function': 0,  # TODO: Add
+            'search_space': list(zip(config.acotsp['param_names'],
+                                         config.acotsp['param_dims'])),
+            'n_runs': len(self.runs),
+            'runs': self.runs,
+        }
+
         with open(path, 'w') as f:
-            json.dump(self.results, f)
+            json.dump(results, f)
 
 
 def random_search(func, dimensions, n_calls=100, random_state=None):
-    """A naive Random Search for Black-Box Optimization"""
+    """A naive Random Search for Black-Box Optimization."""
     rng = np.random.default_rng(random_state)
 
     y_best = np.inf
@@ -71,13 +90,14 @@ def random_search(func, dimensions, n_calls=100, random_state=None):
 
 
 def bayesian_search(func, dimensions, n_calls=100, random_state=None):
-    """A wrapper for skopt.gp_minimize"""
+    """A wrapper for skopt.gp_minimize."""
     try:
         res = gp_minimize(
             func,
             dimensions,
             n_calls=n_calls,
             random_state=random_state,
+            **config.bayesian
         )
     except Exception as e:
         # TODO: Some tsp instances cause exceptions, e.g. br17.atsp

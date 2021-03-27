@@ -13,9 +13,19 @@ acotsp = {
         '-q',  # q
     ],
     'param_dims': [
-        (0.50, 1.00),  # alpha
-        (2.00, 4.00),  # beta
-        (0.01, 0.05),  # rho
-        (0.50, 1.50),  # q
+        (0.00, 10.0),  # alpha
+        (0.00, 10.0),  # beta
+        (0.00, 0.99),  # rho
+        (0.00, 10.0),  # q
     ],
+}
+
+bayesian = {
+    'acq_func': 'EI',
+    'n_initial_points': 10,
+    'x0': None
+}
+
+random = {
+    'x0': None
 }
