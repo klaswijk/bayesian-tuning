@@ -7,20 +7,6 @@ from tqdm import tqdm
 import config
 from Optimizer import Optimizer
 
-SOLVER_ARGS = [
-    '-a',  # alpha
-    '-b',  # beta
-    '-r',  # rho
-    '-q',  # q
-]
-
-DIMS = [
-    (0.50, 1.00),  # alpha
-    (2.00, 4.00),  # beta
-    (0.01, 0.05),  # rho
-    (0.50, 1.50),  # q
-]
-
 global_params = None
 opt = None
 
@@ -55,7 +41,7 @@ def run_tuning(params):
 def _work(*args):
     return opt.run(
         _acotsp,
-        DIMS,
+        config.acotsp['param_dims'],
         n_calls=global_params['n_calls'],
         random_state=args[0]
         # args[0] is the loop index. Use this as the random state (seed)
@@ -73,7 +59,7 @@ def _acotsp(args):
         str(global_params['n_iterations'])
     ]
 
-    for val, name in zip(args, SOLVER_ARGS):
+    for val, name in zip(args, config.acotsp['param_names']):
         call_args.append(str(name))
         call_args.append(str(val))
 
