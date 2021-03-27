@@ -1,7 +1,9 @@
+import os
+import time
+import re
 import subprocess
 import multiprocessing as mp
 from sys import stdout
-from os import getpid
 from functools import partial
 import numpy as np
 from tqdm import tqdm
@@ -29,7 +31,21 @@ def run_tuning(params):
         p.join()
         bar.close()
 
-    opt.write_json(f"./results/{type}/result.json")  # TODO: Unique name
+    # Save the results in ./results/<instance>/<type>-<date>-<time>.json
+    instance_name = re.search(r"([^/]+)(?=\..tsp)", params['tsp']).group(0)
+    path = f'./results/{instance_name}/'
+
+    timestr = time.strftime("%Y%m%d-%H%M%S")
+    file = f'{type}-{timestr}.json'
+
+    if not os.path.exists(path):
+        try:
+            os.makedirs(path)
+        except Exception as e:
+            print(e)
+            raise PermissionError(f'Could not create directory {path}')
+
+    opt.write_json(path + file)
 
 
 def _work(*args):
