@@ -19,9 +19,9 @@ Bayesian parameter tuning of the Ant Colony Metaheuristic applied to the Travell
 
 ## Tuning procedure
 
-The tuning is performed using either random or Bayesian search (`-b | -r`) on
+The tuning is performed using either constant, random or Bayesian search (`--constant | --random | --bayesian`) on
 one TSPLIB instance at a time (`-tsp`). Tuning consists of calling the
 Ant Colony Optimization algorithm *c* (`-c`) times with fixed number of
 iterations *i* (`-i`), letting the tuning algorithm decide which parameters to evaluate for each of the *c* calls. This procedure is then repeated *n* (`-n`)
 times. The results are recorded in a JSON file in the `/results` subfolder that
-corresponds to the tuning algorithm used.
+corresponds to the tsp instance that was run.
