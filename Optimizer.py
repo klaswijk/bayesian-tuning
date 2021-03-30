@@ -1,4 +1,5 @@
 import json
+from functools import partial
 import numpy as np
 import scipy.optimize as so
 from skopt import gp_minimize
@@ -7,13 +8,14 @@ import config
 class Optimizer:
     """Wraps an optimization function to record partial results."""
 
-    def __init__(self, optimization_func):
+    def __init__(self, optimization_func, objective_func):
         name_to_func = {
             'random': random_search,
             'bayesian': bayesian_search,
+            'constant': constant_search,
         }
-        self.func_name = optimization_func
-        self.run = name_to_func[self.func_name]
+        self.optimization_func_name = optimization_func
+        self.run = partial(name_to_func[self.optimization_func_name], objective_func)
         self.runs = []
 
 
@@ -35,21 +37,24 @@ class Optimizer:
         Write results to a JSON-file, including information about the
         optimizer used.
         """
-
         name_to_params = {
             'random': config.random,
             'bayesian': config.bayesian,
+            'constant': config.constant,
         }
-        params = name_to_params[self.func_name]
+        params = name_to_params[self.optimization_func_name]
 
         results = {
             'optimization_function': {
-                'name': self.func_name,
-                'params': params,
+                'name': self.optimization_func_name,
+                'parameters': {**{'n_calls': self.runs[0]['n_calls']}, **params},
             },
-            'objective_function': 0,  # TODO: Add
+            'objective_function': {
+                'name': self.run.args[0].func.__name__,
+                'parameters': self.run.args[0].keywords
+            },
             'search_space': list(zip(config.acotsp['param_names'],
-                                         config.acotsp['param_dims'])),
+                                     config.acotsp['param_dims'])),
             'n_runs': len(self.runs),
             'runs': self.runs,
         }
@@ -104,3 +109,12 @@ def bayesian_search(func, dimensions, n_calls=100, random_state=None):
         import traceback
         traceback.print_exc()
     return res
+
+
+def constant_search(func, dimensions, n_calls=100, random_state=None):
+    return random_search(
+        func,
+        [(p, p) for p in config.constant['params']],
+        n_calls=n_calls,
+        random_state=random_state
+    )

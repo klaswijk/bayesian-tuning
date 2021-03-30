@@ -6,8 +6,9 @@ from tuning import run_tuning
 if __name__ == "__main__":
     parser = argparse.ArgumentParser()
     group = parser.add_mutually_exclusive_group(required=True)
-    group.add_argument('-r', '--random', action='store_true', help='use Random Search')
-    group.add_argument('-b', '--bayesian', action='store_true', help='use Bayesian Search')
+    group.add_argument('--random', action='store_true', help='use Random Search')
+    group.add_argument('--bayesian', action='store_true', help='use Bayesian Search')
+    group.add_argument('--constant', action='store_true', help='use constant parameters')
     parser.add_argument('-t', '--tsp',
         help='the path of the TSPLIB instance to run',
         required=True

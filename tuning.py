@@ -14,9 +14,15 @@ from Optimizer import Optimizer
 def run_tuning(params):
     """Run the tuning according to the params (n_runs, n_procs etc.)"""
 
-    type = 'bayesian' if params['bayesian'] else 'random'
-    instance_name = re.search(r"([^/]+)(?=\..tsp)", params['tsp']).group(0)
-    opt = Optimizer(type)
+    if params['bayesian']:
+        type = 'bayesian'
+    elif params['random']:
+        type = 'random'
+    elif params['constant']:
+        type = 'constant'
+        
+    instance_name = re.search(r"([^/]+)(?=\..?tsp)", params['tsp']).group(0)
+    opt = Optimizer(type, partial(acotsp, tsp_instance=params['tsp'], n_iter=params['n_iterations']))
     bar = tqdm(total=params['n_runs'], file=stdout, ascii=True)
 
     def record_result(result):
@@ -34,7 +40,6 @@ def run_tuning(params):
 
     # Save the results in ./results/<instance>/<type>-<date>-<time>.json
     path = f'./results/{instance_name}/'
-
     timestr = time.strftime("%Y%m%d-%H%M%S")
     file = f'{type}-{timestr}.json'
 
@@ -49,9 +54,7 @@ def run_tuning(params):
 
 
 def _work(*args):
-    func = partial(_acotsp, tsp_instance=args[1]['tsp'], n_iter=args[1]['n_iterations'])
     return args[0].run(
-        func,
         config.acotsp['param_dims'],
         n_calls=args[1]['n_calls'],
         random_state=args[2]
@@ -60,7 +63,7 @@ def _work(*args):
     )
 
 
-def _acotsp(args, tsp_instance=None, n_iter=None):
+def acotsp(args, tsp_instance=None, n_iter=None):
     """The acotsp objective function"""
     call_args = [
         config.acotsp['path'],
