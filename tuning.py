@@ -71,7 +71,8 @@ def acotsp(args, tsp_instance=None, n_iter=None):
         '-f',
         tsp_instance,
         '-i',
-        str(n_iter)
+        str(n_iter),
+        '--hideiter'
     ]
 
     for val, name in zip(args, config.acotsp['param_names']):
@@ -85,4 +86,6 @@ def acotsp(args, tsp_instance=None, n_iter=None):
         encoding='utf8'
     ).communicate()[0]
 
-    return float(p)
+    res = p.split()[2]  # extract the length of the tour
+
+    return float(res)
