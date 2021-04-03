@@ -20,9 +20,20 @@ def run_tuning(params):
         type = 'random'
     elif params['constant']:
         type = 'constant'
-        
+
     instance_name = re.search(r"([^/]+)(?=\..?tsp)", params['tsp']).group(0)
-    opt = Optimizer(type, partial(acotsp, tsp_instance=params['tsp'], n_iter=params['n_iterations']))
+    instance_size = re.search(r"(\d+)", instance_name).group(0)
+
+    opt = Optimizer(
+        type,
+        partial(
+            acotsp,
+            tsp_instance=params['tsp'],
+            instance_size=instance_size,
+            n_iter=params['n_iterations']
+        )
+    )
+
     bar = tqdm(total=params['n_runs'], file=stdout, ascii=True)
 
     def record_result(result):
@@ -63,7 +74,7 @@ def _work(*args):
     )
 
 
-def acotsp(args, tsp_instance=None, n_iter=None):
+def acotsp(args, tsp_instance=None, instance_size=None, n_iter=None):
     """The acotsp objective function"""
     call_args = [
         config.acotsp['path'],
@@ -72,6 +83,8 @@ def acotsp(args, tsp_instance=None, n_iter=None):
         tsp_instance,
         '-i',
         str(n_iter),
+        '-m',
+        instance_size,
         '--hideiter'
     ]
 
