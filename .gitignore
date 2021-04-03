@@ -129,6 +129,5 @@ dmypy.json
 .pyre/
 
 # Extra
-.results/bayesian/
-.results/random/
+.results/
 acotsp
