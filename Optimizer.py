@@ -2,7 +2,7 @@ import json
 from functools import partial
 import numpy as np
 import scipy.optimize as so
-from skopt import gp_minimize
+from skopt import gp_minimize, dummy_minimize
 import config
 
 class Optimizer:
@@ -64,34 +64,20 @@ class Optimizer:
 
 
 def random_search(func, dimensions, n_calls=100, random_state=None):
-    """A naive Random Search for Black-Box Optimization."""
-    rng = np.random.default_rng(random_state)
-
-    y_best = np.inf
-    X_best = None
-
-    y_iters = []
-    X_iters = []
-
-    for _ in range(n_calls):
-        # min is inclusive, max is exclusive
-        X = [rng.uniform(low=min_val, high=max_val)
-                for min_val, max_val in dimensions]
-        y = func(X)
-
-        X_iters.append(X)
-        y_iters.append(y)
-
-        if y < y_best:
-            y_best = y
-            X_best = X
-
-    return so.optimize.OptimizeResult(
-        x=X_best,
-        fun=y_best,
-        x_iters=X_iters,
-        func_vals=y_iters
-    )
+    """A wrapper for skopt.dummy_minimize."""
+    try:
+        res = dummy_minimize(
+            func,
+            dimensions,
+            n_calls=n_calls,
+            random_state=random_state,
+            **config.random
+        )
+    except Exception as e:
+        # TODO: Some tsp instances cause exceptions, e.g. br17.atsp
+        import traceback
+        traceback.print_exc()
+    return res
 
 
 def bayesian_search(func, dimensions, n_calls=100, random_state=None):
