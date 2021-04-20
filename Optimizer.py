@@ -67,7 +67,7 @@ def random_search(func, dimensions, n_calls=100, random_state=None):
     """A wrapper for skopt.dummy_minimize."""
     try:
         res = dummy_minimize(
-            func,
+            partial(func, random_state=random_state),
             dimensions,
             n_calls=n_calls,
             random_state=random_state,
@@ -84,7 +84,7 @@ def bayesian_search(func, dimensions, n_calls=100, random_state=None):
     """A wrapper for skopt.gp_minimize."""
     try:
         res = gp_minimize(
-            func,
+            partial(func, random_state=random_state),
             dimensions,
             n_calls=n_calls,
             random_state=random_state,

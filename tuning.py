@@ -70,11 +70,11 @@ def _work(*args):
         n_calls=args[1]['n_calls'],
         random_state=args[2]
         # args[0] is the loop index. Use this as the random state (seed)
-        # to make sure that the repeated run's do not share random state
+        # to make sure that the repeated runs do not share random state
     )
 
 
-def acotsp(args, tsp_instance=None, instance_size=None, n_iter=None):
+def acotsp(args, tsp_instance=None, instance_size=None, n_iter=None, random_state=0):
     """The acotsp objective function"""
     call_args = [
         config.acotsp['path'],
@@ -85,6 +85,8 @@ def acotsp(args, tsp_instance=None, instance_size=None, n_iter=None):
         str(n_iter),
         '-m',
         instance_size,
+        '-s',
+        str(random_state),
         '--hideiter'
     ]
 
