@@ -33,6 +33,11 @@ if __name__ == "__main__":
         type=int,
         default=cpu_count()
     )
+    parser.add_argument('--cache',
+        help='use intial sampling from given results as a cache (bayesian only)',
+        type=str,
+        default=None
+    )
     args = parser.parse_args()
     assert(os.path.exists(args.tsp))
     run_tuning(vars(args))

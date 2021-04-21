@@ -31,7 +31,8 @@ def run_tuning(params):
             tsp_instance=params['tsp'],
             instance_size=instance_size,
             n_iter=params['n_iterations']
-        )
+        ),
+        cache=params['cache']
     )
 
     bar = tqdm(total=params['n_runs'], file=stdout, ascii=True)

@@ -1,4 +1,5 @@
 import json
+import copy
 from functools import partial
 import numpy as np
 import scipy.optimize as so
@@ -9,14 +10,19 @@ import config
 class Optimizer:
     """Wraps an optimization function to record partial results."""
 
-    def __init__(self, optimization_func, objective_func):
+    def __init__(self, optimization_func, objective_func, cache=False):
         name_to_func = {
             'random': random_search,
             'bayesian': bayesian_search,
             'constant': constant_search,
         }
         self.optimization_func_name = optimization_func
-        self.run = partial(name_to_func[self.optimization_func_name], objective_func)
+        if self.optimization_func_name == 'bayesian':
+            self.run = partial(name_to_func[self.optimization_func_name],
+                objective_func, cache=cache)
+        else:
+            self.run = partial(name_to_func[self.optimization_func_name],
+                objective_func)
         self.runs = []
 
 
@@ -97,17 +103,51 @@ def random_search(func, dimensions, n_calls=100, random_state=None):
         import traceback
         traceback.print_exc()
 
+def initial_sampling_cache(result_path, random_state):
+    with open(result_path, 'r') as file:
+        cache = json.loads(file.read())
 
-def bayesian_search(func, dimensions, n_calls=100, random_state=None):
+        if random_state == 0:
+            # Verify that the given cache is valid the first time it is used
+            assert(cache["optimization_function"]["name"] == "bayesian")
+            p = cache["optimization_function"]["parameters"]
+            for setting in ("n_initial_points", "initial_point_generator"):
+                assert(p[setting] == config.bayesian[setting])
+            config_space = list(config.acotsp["param_dims"])
+            cache_space = cache["search_space"]
+            for cache_dim, config_dim in zip(cache_space, config_space):
+                assert(cache_dim[1] == list(config_dim))
+
+        n = cache["optimization_function"]["parameters"]["n_initial_points"]
+        initial_calls = cache["runs"][random_state]["calls"][0:n]
+        x0, y0 = [], []
+        for call in initial_calls:
+            x0.append(call[0])
+            y0.append(call[1])
+
+    return (x0, y0)
+
+
+def bayesian_search(func, dimensions, n_calls=100, random_state=None, cache=False):
     """A wrapper for skopt.gp_minimize."""
     try:
+        conf = config.bayesian
+        if cache and random_state != None:
+            c = initial_sampling_cache(cache, random_state)
+            n_calls -= len(c[0])
+            config.bayesian["n_initial_points"] = 0
+        else:
+            c = (None, None)
+
         f = ObjFunc(func, dimensions, random_state=random_state)
         return (gp_minimize(
             f,
             dimensions,
             n_calls=n_calls,
             random_state=random_state,
-            **config.bayesian
+            x0=c[0],
+            y0=c[1],
+            **conf
         ), random_state)
     except Exception as e:
         # TODO: Some tsp instances cause exceptions, e.g. br17.atsp
