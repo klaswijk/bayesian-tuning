@@ -78,7 +78,7 @@ class ObjFunc:
         c = len(list(filter(lambda x: x < 1e-8, (self.space.distance(args, p)
             for p in self.prev_args))))
         self.prev_args.append(args)
-        f = partial(self.func, random_state=(self.random_state + (c << 10)))
+        f = partial(self.func, random_state=(10 + (c << self.random_state)))
         return f(args)
 
 
@@ -100,7 +100,6 @@ def random_search(func, dimensions, n_calls=100, random_state=None):
 
 def bayesian_search(func, dimensions, n_calls=100, random_state=None):
     """A wrapper for skopt.gp_minimize."""
-
     try:
         f = ObjFunc(func, dimensions, random_state=random_state)
         return (gp_minimize(
