@@ -26,9 +26,10 @@ class Optimizer:
         from the same optimizer run on the same function.
         """
         run = {
-            'result': (result.x, result.fun),
-            'n_calls': len(result.x_iters),
-            'calls': list(zip(result.x_iters, result.func_vals)),
+            'result': (result[0].x, result[0].fun),
+            'n_calls': len(result[0].x_iters),
+            'random_state': result[1],
+            'calls': list(zip(result[0].x_iters, result[0].func_vals)),
         }
         self.runs.append(run)
 
@@ -44,6 +45,8 @@ class Optimizer:
             'constant': config.constant,
         }
         params = name_to_params[self.optimization_func_name]
+
+        self.runs.sort(key=lambda r: r['random_state'])
 
         results = {
             'optimization_function': {
@@ -64,7 +67,7 @@ class Optimizer:
             json.dump(results, f)
 
 
-class obj_func:
+class ObjFunc:
     def __init__(self, func, dimensions, random_state=None):
         self.random_state = random_state
         self.prev_args = []
@@ -82,14 +85,14 @@ class obj_func:
 def random_search(func, dimensions, n_calls=100, random_state=None):
     """A wrapper for skopt.dummy_minimize."""
     try:
-        f = obj_func(func, dimensions, random_state=random_state)
-        return dummy_minimize(
+        f = ObjFunc(func, dimensions, random_state=random_state)
+        return (dummy_minimize(
             f,
             dimensions,
             n_calls=n_calls,
             random_state=random_state,
             **config.random
-        )
+        ), random_state)
     except Exception as e:
         import traceback
         traceback.print_exc()
@@ -99,14 +102,14 @@ def bayesian_search(func, dimensions, n_calls=100, random_state=None):
     """A wrapper for skopt.gp_minimize."""
 
     try:
-        f = obj_func(func, dimensions, random_state=random_state)
-        return gp_minimize(
+        f = ObjFunc(func, dimensions, random_state=random_state)
+        return (gp_minimize(
             f,
             dimensions,
             n_calls=n_calls,
             random_state=random_state,
             **config.bayesian
-        )
+        ), random_state)
     except Exception as e:
         # TODO: Some tsp instances cause exceptions, e.g. br17.atsp
         import traceback
@@ -115,7 +118,7 @@ def bayesian_search(func, dimensions, n_calls=100, random_state=None):
 
 def constant_search(func, dimensions, n_calls=100, random_state=None):
     try:
-        f = obj_func(func, dimensions, random_state=random_state)
+        f = ObjFunc(func, dimensions, random_state=random_state)
         y_best = np.inf
         X_best = None
         y_iters = []
@@ -131,12 +134,12 @@ def constant_search(func, dimensions, n_calls=100, random_state=None):
                 y_best = y
                 X_best = X
 
-        return so.optimize.OptimizeResult(
+        return (so.optimize.OptimizeResult(
             x=X_best,
             fun=y_best,
             x_iters=X_iters,
             func_vals=y_iters
-        )
+        ), random_state)
     except Exception as e:
         import traceback
         traceback.print_exc()
