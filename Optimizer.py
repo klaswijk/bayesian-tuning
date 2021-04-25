@@ -33,8 +33,8 @@ class Optimizer:
         """
         run = {
             'result': (result[0].x, result[0].fun),
-            'n_calls': len(result[0].x_iters),
             'random_state': result[1],
+            'n_calls': len(result[0].x_iters),
             'calls': list(zip(result[0].x_iters, result[0].func_vals)),
         }
         self.runs.append(run)

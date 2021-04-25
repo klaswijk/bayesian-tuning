@@ -13,23 +13,24 @@ acotsp = {
         '-q',  # q
     ],
     'param_dims': [
-        (0.00, 3.0),  # alpha
-        (0.00, 3.0),  # beta
-        (0.00, 0.99),  # rho
-        (0.00, 3.0),  # q
+        (1.0, 5.0),  # alpha
+        (0.0, 4.0),  # beta
+        (0.1, 0.99),  # rho
+        (0.0, 10.0),  # q
     ],
 }
 
 bayesian = {
-    'acq_func': 'LCB',
-    #'xi': 0.01,
-    'kappa': 1.96,
-    'n_initial_points': 10,
-    'x0': None
+    'acq_func': 'PI',
+    'xi': 0.01,  # EI and PI
+    #'kappa': 1.96,  # LCB
+    'n_initial_points': 25,
+    'initial_point_generator': 'hammersly',
+    'noise': 0.07,
 }
 
 random = {
-    'x0': None
+    'initial_point_generator': 'random',
 }
 
 constant = {
