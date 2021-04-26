@@ -84,7 +84,7 @@ class ObjFunc:
         c = len(list(filter(lambda x: x < 1e-8, (self.space.distance(args, p)
             for p in self.prev_args))))
         self.prev_args.append(args)
-        f = partial(self.func, random_state=(10 + (c << self.random_state)))
+        f = partial(self.func, random_state=(c + (self.random_state << 10)))
         return f(args)
 
 
